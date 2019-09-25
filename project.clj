@@ -5,7 +5,8 @@
   :dependencies [[org.clojure/clojure "1.10.0"]
                  [compojure "1.6.1"]
                  [ring/ring-defaults "0.3.2"]
-                 [com.novemberain/monger "3.1.0"]]
+                 [com.novemberain/monger "3.1.0"]
+                 [cheshire	"5.9.0"]]
   :plugins [[lein-ring "0.12.5"]]
   :ring {:handler billing.handler/app}
   :profiles
