@@ -19,3 +19,10 @@
   (-> m
       convert-all-ObjectId
       generate-string))
+
+(defn response-json
+  [m]
+  (	{:headers	{"Content-Type"
+                 "application/json;	charset=utf-8"}
+      :body	(generate-json m)})
+  )

@@ -7,7 +7,7 @@
 
 (defroutes app-routes
   (GET "/" [] "Hello World")
-  (GET "/customers" [] (generate-json (db/get-customers)))
+  (GET "/customers" [] (response-json (db/get-customers)))
   (route/not-found "Not Found"))
 
 (def app
