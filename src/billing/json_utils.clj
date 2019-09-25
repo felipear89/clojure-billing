@@ -1,28 +1,20 @@
 (ns billing.json-utils
-  (:require [cheshire.core :refer :all])
+  (:require [cheshire.core :refer [generate-string]]
+            [cheshire.generate :refer [add-encoder encode-str]])
   (:import (org.bson.types ObjectId)))
 
-(defn convert-ObjectId-to-string [[k v]]
-  (if (= ObjectId (class v))
-    [k (str v)]
-    [k v]))
+(add-encoder ObjectId encode-str)
 
-(defn convert-all-ObjectId [m]
-  (clojure.walk/postwalk
-    (fn [m]
-      (if (map? m)
-        (into {} (map convert-ObjectId-to-string m))
-        m))
-    m))
-
-(defn generate-json [m]
-  (-> m
-      convert-all-ObjectId
-      generate-string))
+(defn- response-content-json
+  [content]
+   	{
+     :headers	{"Content-Type" "application/json;	charset=utf-8"}
+      :body	content
+     }
+  )
 
 (defn response-json
-  [m]
-  (	{:headers	{"Content-Type"
-                 "application/json;	charset=utf-8"}
-      :body	(generate-json m)})
-  )
+  [param]
+  (-> param
+      generate-string
+      response-content-json))
