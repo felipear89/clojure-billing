@@ -2,12 +2,12 @@
   (:require [compojure.core :refer :all]
             [compojure.route :as route]
             [ring.middleware.defaults :refer [wrap-defaults api-defaults]]
-            [billing.db :as db]
-            ))
+            [billing.json-utils :refer :all]
+            [billing.db :as db]))
 
 (defroutes app-routes
   (GET "/" [] "Hello World")
-  (GET "/customers" [] (db/get-customers))
+  (GET "/customers" [] (generate-json (db/get-customers)))
   (route/not-found "Not Found"))
 
 (def app
