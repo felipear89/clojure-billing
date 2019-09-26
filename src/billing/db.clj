@@ -8,3 +8,7 @@
 (defn get-customers
   []
   (mc/find-maps db "customers"))
+
+(defn get-default-rates
+  []
+  (mc/find-maps db "default_rates"))
