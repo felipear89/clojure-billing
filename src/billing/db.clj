@@ -18,6 +18,6 @@
 
 (defn get-default-rates-now
   []
-  (first (mc/find-maps db "default_rates" {:start_date { "$lte" now }
-                                    :end_date   { "$gt" now }
-                                    })))
+  (first (mc/find-maps db "default_rates" {:start_date {"$lte" now}
+                                           :end_date   {"$gt" now}
+                                           })))

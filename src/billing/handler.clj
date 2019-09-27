@@ -32,7 +32,7 @@
   [resources]
   (let [default-rates-info (db/get-default-rates-now)
         rates (get default-rates-info :rates)
-        rate-price (reduce (fn [final r] (assoc final (:name r) (:price r)) ) {} rates)
+        rate-price (reduce (fn [final r] (assoc final (:name r) (:price r))) {} rates)
         ]
     (println (get-price rate-price "BigBoostx"))
     ;(->> rates
@@ -41,12 +41,12 @@
     ))
 
 (defroutes app-routes
-  (GET "/" [] "Hello World")
-  (GET "/customers" []  {:body (db/get-customers)})
-  (GET "/default_rates" [] {:body (db/get-default-rates)})
-  (GET "/default_rates_now" [] {:body (db/get-default-rates-now)})
-  (POST "/calc" request {:body (calc (get-in request [:body "resources"]))})
-  (route/not-found "Not Found"))
+           (GET "/" [] "Hello World")
+           (GET "/customers" [] {:body (db/get-customers)})
+           (GET "/default_rates" [] {:body (db/get-default-rates)})
+           (GET "/default_rates_now" [] {:body (db/get-default-rates-now)})
+           (POST "/calc" request {:body (calc (get-in request [:body "resources"]))})
+           (route/not-found "Not Found"))
 
 (defn wrap-content-json [h]
   (fn [req] (assoc-in (h req) [:headers "Content-Type"] "application/json; charset=utf-8")))
@@ -61,9 +61,9 @@
 (add-encoder ObjectId encode-str)
 
 (def app
-  (->	(wrap-defaults	app-routes	api-defaults)
+  (-> (wrap-defaults app-routes api-defaults)
       (wrap-json-body)
-       (wrap-json-data)
-       (wrap-json-response)
-       (wrap-content-json)
-       ))
+      (wrap-json-data)
+      (wrap-json-response)
+      (wrap-content-json)
+      ))
