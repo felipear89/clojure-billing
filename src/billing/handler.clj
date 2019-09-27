@@ -4,40 +4,15 @@
             [ring.middleware.defaults :refer [wrap-defaults api-defaults]]
             [ring.middleware.json :refer [wrap-json-body wrap-json-response]]
             [cheshire.generate :refer [add-encoder encode-str]]
-            [billing.db :as db])
+            [billing.db :as db]
+            [billing.compute-resource :refer [compute]]
+            [cheshire.parse :as parse])
   (:import (org.bson.types ObjectId)))
 
-;(defn find-first
-;  [f coll]
-;  (first (filter f coll)))
-;
-;;(defn find-rate
-;;  [rates name]
-;;  (if-let [rate (find-first #(= name (:name %)) rates)]
-;;    (:price rate)
-;;    )
-;;  )
-
-
-(defn get-price
-  [rate-price name]
-  (if-let [price (get rate-price name)]
-    price
-    (get rate-price "Others")
-    )
-  )
-
-; essa funcao tem que ficar pura
-(defn calc
-  [resources]
-  (let [default-rates-info (db/get-default-rates-now)
-        rates (get default-rates-info :rates)
-        rate-price (reduce (fn [final r] (assoc final (:name r) (:price r))) {} rates)
-        ]
-    (println (get-price rate-price "BigBoostx"))
-    ;(->> rates
-    ;    (map #())
-    ;    )
+(defn compute-resources [request]
+  (let [resources (get-in request [:body "resources"])
+        rates (get (db/get-default-rates-now) :rates)]
+    {:body (compute resources rates)}
     ))
 
 (defroutes app-routes
@@ -45,7 +20,7 @@
            (GET "/customers" [] {:body (db/get-customers)})
            (GET "/default_rates" [] {:body (db/get-default-rates)})
            (GET "/default_rates_now" [] {:body (db/get-default-rates-now)})
-           (POST "/calc" request {:body (calc (get-in request [:body "resources"]))})
+           (POST "/compute_resources" request (compute-resources request))
            (route/not-found "Not Found"))
 
 (defn wrap-content-json [h]
