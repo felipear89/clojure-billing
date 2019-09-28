@@ -5,7 +5,9 @@
             [ring.middleware.json :refer [wrap-json-body wrap-json-response]]
             [cheshire.generate :refer [add-encoder encode-str]]
             [billing.db :as db]
-            [billing.compute-resource :refer [compute]])
+            [billing.compute-resource :refer [compute]]
+            [clojure.tools.logging :as log]
+            [ring.logger :as ring-logger])
   (:import (org.bson.types ObjectId)))
 
 (defn compute-resources [request]
@@ -14,6 +16,7 @@
         resources-charges (compute resources rates)
         reduce-total-to-pay (fn [total r] (+ total (BigDecimal. (:totalToPay r))))
         total-to-pay (reduce reduce-total-to-pay 0 resources-charges)]
+    (log/info "Resources computed" resources-charges)
     {:body {
             :resources  resources-charges
             :totalToPay (str total-to-pay)
@@ -46,4 +49,4 @@
       (wrap-json-data)
       (wrap-json-response)
       (wrap-content-json)
-      ))
+      (ring-logger/wrap-with-logger)))

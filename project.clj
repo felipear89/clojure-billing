@@ -7,7 +7,10 @@
                  [ring/ring-defaults "0.3.2"]
                  [com.novemberain/monger "3.5.0"]
                  [cheshire	"5.9.0"]
-                 [ring/ring-json	"0.5.0"]]
+                 [ring/ring-json	"0.5.0"]
+                 [org.clojure/tools.logging "0.5.0"]
+                 [ch.qos.logback/logback-classic "1.2.3"]
+                 [ring-logger "1.0.1"]]
   :plugins [[lein-ring "0.12.5"]]
   :ring {:handler billing.handler/app}
   :profiles
