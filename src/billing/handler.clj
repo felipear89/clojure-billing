@@ -5,14 +5,19 @@
             [ring.middleware.json :refer [wrap-json-body wrap-json-response]]
             [cheshire.generate :refer [add-encoder encode-str]]
             [billing.db :as db]
-            [billing.compute-resource :refer [compute]]
-            [cheshire.parse :as parse])
+            [billing.compute-resource :refer [compute]])
   (:import (org.bson.types ObjectId)))
 
 (defn compute-resources [request]
   (let [resources (get-in request [:body "resources"])
-        rates (get (db/get-default-rates-now) :rates)]
-    {:body (compute resources rates)}
+        rates (get (db/get-default-rates-now) :rates)
+        resources-charges (compute resources rates)
+        reduce-total-to-pay (fn [total r] (+ total (BigDecimal. (:totalToPay r))))
+        total-to-pay (reduce reduce-total-to-pay 0 resources-charges)]
+    {:body {
+            :resources  resources-charges
+            :totalToPay (str total-to-pay)
+            }}
     ))
 
 (defroutes app-routes
