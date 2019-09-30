@@ -11,14 +11,16 @@
 
 (def round4 (round 4))
 
+(def default-rate "Others")
+
 (defn get-price [resource-price name]
   (if-let [price (get resource-price name)]
     price
-    (get resource-price "Others")))
+    (get resource-price default-rate)))
 
 (defn get-price-to-pay [resource-price resource]
-  (let [resource-name (get resource "name")
-        counter (get resource "count")
+  (let [resource-name (get resource :name)
+        counter (get resource :count)
         unit-price (get-price resource-price resource-name)]
     (* counter unit-price))
   )
@@ -33,7 +35,7 @@
 
 (defn assoc-unit-price [resource resource-price]
   (let
-    [unit-price (get-price resource-price (get resource "name"))]
+    [unit-price (get-price resource-price (get resource :name))]
     (assoc resource :unitPrice (str (round4 unit-price)))))
 
 (defn map-resource-price [resource-price]
