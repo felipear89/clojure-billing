@@ -1,4 +1,5 @@
 (ns billing.handler
+  (:use clojure.pprint)
   (:require [compojure.core :refer :all]
             [compojure.route :as route]
             [ring.middleware.defaults :refer [wrap-defaults api-defaults]]
@@ -7,11 +8,23 @@
             [billing.db :as db]
             [billing.compute-resource :refer [compute]]
             [clojure.tools.logging :as log]
-            [ring.logger :as ring-logger])
+            [ring.logger :as ring-logger]
+            [schema.core :as s]
+            [schema-tools.core :as st])
+
   (:import (org.bson.types ObjectId)))
+
+(def PosInt (s/pred pos-int? 'inteiro-positivo))
+
+(def ResourceToCompute (st/open-schema {
+                                        :name  s/Str
+                                        :count PosInt
+                                        }))
+(def Resources [ResourceToCompute])
 
 (defn compute-resources [request]
   (let [resources (get-in request [:body :resources])
+        resources (s/validate Resources resources)
         rates (get (db/get-default-rates-now) :rates)
         resources-charges (compute resources rates)
         reduce-total-to-pay (fn [total r] (+ total (BigDecimal. (:totalToPay r))))
@@ -23,15 +36,12 @@
             }}
     ))
 
-(defrecord Pessoa [nome])
-
 (defroutes app-routes
            (GET "/" [] "Hello World")
            (GET "/customers" [] {:body (db/get-customers)})
            (GET "/default_rates" [] {:body (db/get-default-rates)})
            (GET "/default_rates_now" [] {:body (db/get-default-rates-now)})
            (POST "/compute_resources" request (compute-resources request))
-           (POST "/pessoa" request (Pessoa. (get-in request [:body "pessoa"] )))
            (route/not-found "Not Found"))
 
 (defn wrap-content-json [h]
@@ -48,7 +58,7 @@
 
 (def app
   (-> (wrap-defaults app-routes api-defaults)
-      (wrap-json-body { :keywords? true })
+      (wrap-json-body {:keywords? true})
       (wrap-json-data)
       (wrap-json-response)
       (wrap-content-json)

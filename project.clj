@@ -10,7 +10,9 @@
                  [ring/ring-json	"0.5.0"]
                  [org.clojure/tools.logging "0.5.0"]
                  [ch.qos.logback/logback-classic "1.2.3"]
-                 [ring-logger "1.0.1"]]
+                 [ring-logger "1.0.1"]
+                 [prismatic/schema "1.1.12"]
+                 [metosin/schema-tools "0.12.0"]]
   :plugins [[lein-ring "0.12.5"]]
   :ring {:handler billing.handler/app}
   :profiles
