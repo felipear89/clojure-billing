@@ -3,21 +3,23 @@
             [monger.collection :as mc])
   (:import (java.time LocalDateTime ZoneOffset)))
 
-(def connection (mg/connect))
-(def db (mg/get-db connection "billing"))
-
 (def now (LocalDateTime/now ZoneOffset/UTC))
 
-(defn get-customers
-  []
-  (mc/find-maps db "customers"))
+(def database-name "billing")
+(def connection (mg/connect))
+(def db (mg/get-db connection database-name))
 
-(defn get-default-rates
-  []
-  (mc/find-maps db "default_rates"))
+(def coll_customers "customers")
+(def coll_default_rates "default_rates")
 
-(defn get-default-rates-now
-  []
-  (first (mc/find-maps db "default_rates" {:start_date {"$lte" now}
-                                           :end_date   {"$gt" now}
-                                           })))
+; Queries
+(defn get-customers []
+  (mc/find-maps db coll_customers))
+
+(defn get-default-rates []
+  (mc/find-maps db coll_default_rates))
+
+(defn get-default-rates-now []
+  (first (mc/find-maps db coll_default_rates {:start_date {"$lte" now}
+                                              :end_date   {"$gt" now}
+                                              })))

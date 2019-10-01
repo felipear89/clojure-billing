@@ -1,7 +1,7 @@
 (ns billing.handler-test
   (:require [clojure.test :refer :all]
             [ring.mock.request :as mock]
-            [billing.handler :refer :all]))
+            [billing.routes :refer :all]))
 
 (deftest test-app
   (testing "main route"
