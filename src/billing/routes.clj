@@ -12,10 +12,10 @@
 
 (defroutes app-routes
            (GET "/" [] "Hello World")
-           (GET "/customers" [] {:body (db/get-customers)})
+           (GET "/contracts" [] {:body (db/get-contracts)})
            (GET "/default_rates" [] {:body (db/get-default-rates)})
            (GET "/default_rates_now" [] {:body (db/get-default-rates-now)})
-           (POST "/charge_resources" request (post-charge-resources request))
+           (POST "/charge_resources" request {:body (post-charge-resources request)})
            (route/not-found "Not Found"))
 
 (defn wrap-content-json [h]
