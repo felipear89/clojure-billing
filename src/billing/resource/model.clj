@@ -6,4 +6,11 @@
 (def ResourceConsumption {:name  s/Str
                           :count PosInt})
 
-(def ResourceConsumptionList [ResourceConsumption])
+(def Consumption {:contractId s/Str
+                  :resources [ResourceConsumption]})
+
+(def Consumptions [Consumption])
+
+(def ChargeResources {:customerName s/Str
+                      :consumptions Consumptions})
+
