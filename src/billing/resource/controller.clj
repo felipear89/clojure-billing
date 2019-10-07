@@ -1,48 +1,26 @@
 (ns billing.resource.controller
   (:use clojure.pprint)
   (:require [billing.db :as db]
-            [billing.resource.model :refer [ResourceConsumptionList]]))
+            [billing.contract.logic :refer [contracts-by-id]]
+            [billing.rate.logic :refer [rates-by-resource-name find-price assoc-costs]]))
 
-(defn- rates-by-name [rates]
-  (let [group-by-resource (fn [result rate] (assoc result (:resourceName rate) rate))]
-    (reduce group-by-resource {} rates)))
+(defn- get-contracts-by-id [customer-name]
+  (let [constracts (db/get-contracts-by-customer customer-name)]
+    (contracts-by-id constracts)))
 
-(defn- get-default-rates [id]
-  (let [default-rate-list (get (db/get-default-rates-by-id id) :rates)]
-    (rates-by-name default-rate-list)))
-
-(defn contracts-by-id [constracts]
-  (let [fn-group-by-date (fn [result contract]
-                           (assoc result (str (:_id contract)) contract))]
-    (reduce fn-group-by-date {} constracts)))
-
-(defn get-contracts [customer-name]
-  (let [constracts (db/get-contracts-by-customer customer-name)
-        contracts (contracts-by-id constracts)]
-    (first (map (fn [[k v]] {k (assoc v :rateByResource (rates-by-name (:rates v)))}) contracts))))
-
-(defn find-price [resource-name contract resource-price-default]
-  (cond
-    (get-in contract [:rateByResource resource-name]) (get-in contract [:rateByResource resource-name :price])
-    (get resource-price-default resource-name) (get-in resource-price-default [resource-name :price])
-    :else (get-in resource-price-default ["Others" :price])))
-
-(defn assoc-cost [contracts]
+(defn- fn-charge-consumption [customer-name]
   (fn [consumption]
-    (let [contractId (:contractId consumption)
-          contract (get contracts contractId)
-          default-rate-resource (get-default-rates (:defaultRateId contract))
-          fn-find-price #(find-price % contract default-rate-resource)
-          fn-assoc-unit-price #(assoc % :unitPrice (fn-find-price (:name %)))
-          fn-assoc-cost #(assoc % :cost (* (:unitPrice %) (:count %)))]
-      (-> consumption
-        (#(assoc % :resources (map fn-assoc-unit-price (:resources %))))
-        (#(assoc % :resources (map fn-assoc-cost (:resources %))))))))
+    (let [contracts (get-contracts-by-id customer-name)
+          contract (get contracts (:contractId consumption))
+          contract-rate (rates-by-resource-name (:rates contract))
+          default-rate (db/get-default-rates-by-id (:defaultRateId contract))
+          default-rate-resource (rates-by-resource-name (:rates default-rate))
+          fn-find-price (partial find-price contract-rate default-rate-resource)]
+      (update consumption :resources #(assoc-costs % fn-find-price)))))
 
 (defn post-charge-resources [request]
   (let [consumptions (get-in request [:body :consumptions])
-        customer-name (get-in request [:body :customerName])
-        contracts (get-contracts customer-name)]
+        customer-name (get-in request [:body :customerName])]
     {
      :customerName customer-name
-     :consumptions (map (assoc-cost contracts) consumptions)}))
+     :consumptions (map (fn-charge-consumption customer-name) consumptions)}))
