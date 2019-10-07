@@ -1,7 +1,6 @@
 (ns billing.resource.controller
   (:use clojure.pprint)
   (:require [billing.db :as db]
-            [billing.resource.logic :refer [charge-resources]]
             [billing.resource.model :refer [ResourceConsumptionList]]))
 
 (defn- rates-by-name [rates]
@@ -24,19 +23,21 @@
 
 (defn find-price [resource-name contract resource-price-default]
   (cond
-    (get-in contract [:rateByResource resource-name]) "achei no contrato"
-    (get resource-price-default resource-name) "achei no default price"
-    :else "sem preco definido"))
+    (get-in contract [:rateByResource resource-name]) (get-in contract [:rateByResource resource-name :price])
+    (get resource-price-default resource-name) (get-in resource-price-default [resource-name :price])
+    :else (get-in resource-price-default ["Others" :price])))
 
 (defn assoc-cost [contracts]
   (fn [consumption]
     (let [contractId (:contractId consumption)
           contract (get contracts contractId)
           default-rate-resource (get-default-rates (:defaultRateId contract))
-          resources (:resources consumption)
           fn-find-price #(find-price % contract default-rate-resource)
-          fn-assoc-cost #(assoc % :cost (fn-find-price (:name %)))]
-      (assoc consumption :resources (map fn-assoc-cost resources)))))
+          fn-assoc-unit-price #(assoc % :unitPrice (fn-find-price (:name %)))
+          fn-assoc-cost #(assoc % :cost (* (:unitPrice %) (:count %)))]
+      (-> consumption
+        (#(assoc % :resources (map fn-assoc-unit-price (:resources %))))
+        (#(assoc % :resources (map fn-assoc-cost (:resources %))))))))
 
 (defn post-charge-resources [request]
   (let [consumptions (get-in request [:body :consumptions])
