@@ -6,6 +6,7 @@
            (java.util Date)
            (org.bson.types ObjectId)))
 
+; Convert to Date from LocalDateTime
 (extend-protocol ConvertToDBObject
   LocalDateTime
   (to-db-object [^LocalDateTime input]
@@ -14,6 +15,7 @@
   (to-db-object [^ZonedDateTime input]
     (to-db-object (Date/from (.toInstant input)))))
 
+; Convert to LocalDateTime from Date
 (extend-protocol ConvertFromDBObject
   Date
   (from-db-object [^Date input keywordize]
@@ -34,13 +36,8 @@
 (defn get-default-rates []
   (mc/find-maps db coll-default-rates))
 
-(defn get-default-rates-now []
-  (first (mc/find-maps db coll-default-rates {:startDate {"$lte" now}
-                                              :endDate {"$gt" now}
-                                              })))
-
 (defn get-default-rates-by-id [id]
   (mc/find-one-as-map db coll-default-rates {:_id (ObjectId. id)}))
 
-(defn get-contracts-by-customer [name]
+(defn get-contracts-by-customer [^String name]
   (mc/find-maps db coll-contracts {:customerName name}))

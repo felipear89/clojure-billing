@@ -8,13 +8,13 @@
             [cheshire.generate :refer [add-encoder encode-str]]
             [billing.db :as db]
             [billing.resource.controller :refer [post-charge-resources]])
-  (:import (org.bson.types ObjectId)))
+  (:import (org.bson.types ObjectId)
+           (java.time LocalDate LocalDateTime)))
 
 (defroutes app-routes
            (GET "/" [] "Hello World")
            (GET "/contracts" [] {:body (db/get-contracts)})
            (GET "/default_rates" [] {:body (db/get-default-rates)})
-           (GET "/default_rates_now" [] {:body (db/get-default-rates-now)})
            (POST "/charge_resources" request {:body (post-charge-resources (:body request))})
            (route/not-found "Not Found"))
 
@@ -28,6 +28,9 @@
         )))
 
 (add-encoder ObjectId encode-str)
+(add-encoder LocalDateTime
+             (fn [c jsonGenerator]
+               (.writeString jsonGenerator (.toString c))))
 
 (def app
   (-> (wrap-defaults app-routes api-defaults)
