@@ -1,5 +1,4 @@
 (ns billing.routes
-  (:use clojure.pprint)
   (:require [compojure.core :refer [defroutes GET POST]]
             [compojure.route :as route]
             [ring.middleware.defaults :refer [wrap-defaults api-defaults]]
@@ -7,15 +6,16 @@
             [ring.logger :as ring-logger]
             [cheshire.generate :refer [add-encoder encode-str]]
             [billing.db :as db]
-            [billing.resource.controller :refer [post-charge-resources]])
+            [billing.contract.controller :refer [post-charge-resources save-contract]])
   (:import (org.bson.types ObjectId)
-           (java.time LocalDate LocalDateTime)))
+           (java.time LocalDateTime Instant)))
 
 (defroutes app-routes
            (GET "/" [] "Hello World")
-           (GET "/contracts" [] {:body (db/get-contracts)})
            (GET "/default_rates" [] {:body (db/get-default-rates)})
-           (POST "/charge_resources" request {:body (post-charge-resources (:body request))})
+           (GET "/contracts" [] {:body (db/get-contracts)})
+           (POST "/contracts" request {:body (save-contract (:body request))})
+           (POST "/contracts/charge_resources" request {:body (post-charge-resources (:body request))})
            (route/not-found "Not Found"))
 
 (defn wrap-content-json [h]
@@ -31,10 +31,13 @@
 (add-encoder LocalDateTime
              (fn [c jsonGenerator]
                (.writeString jsonGenerator (.toString c))))
+(add-encoder Instant
+             (fn [c jsonGenerator]
+               (.writeString jsonGenerator (.toString c))))
 
 (def app
   (-> (wrap-defaults app-routes api-defaults)
-      (wrap-json-body {:keywords? true})
+      (wrap-json-body {:keywords? true :bigdecimals? true})
       (wrap-json-data)
       (wrap-json-response)
       (wrap-content-json)

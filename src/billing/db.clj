@@ -29,6 +29,9 @@
 (def coll-contracts "contracts")
 (def coll-default-rates "default_rates")
 
+(defn save-contract [contract]
+  (mc/insert-and-return db coll-contracts contract))
+
 ; Queries
 (defn get-contracts []
   (mc/find-maps db coll-contracts))
