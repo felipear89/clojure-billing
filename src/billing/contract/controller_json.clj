@@ -1,16 +1,19 @@
 (ns billing.contract.controller-json
   (:require [schema.core :as s]
-            [schema.utils :as s-utils]
             [schema.coerce :as coerce])
   (:import (java.time Instant)))
 
-(def PosInt (s/pred pos-int? 'inteiro-positivo))
+(def PosInt (s/pred pos-int? 'integer-positivo))
+(def Money (s/pred decimal? 'money))
 
 (def Rate {:resourceName s/Str
-           :price        BigDecimal
+           :price        Money
            })
 
 (def Rates [Rate])
+
+(def DefaultRates {:name s/Str
+                   :rates Rates})
 
 (def ContractRequest {:customerName  s/Str
                       :startDate     Instant
@@ -31,6 +34,7 @@
                              :consumptions Consumptions})
 
 (def datetime-regex #"\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z")
+(def money-regex #"\d*\.\d{4}")
 
 (defn datetime-matcher [schema]
   (when (= Instant schema)
@@ -40,5 +44,18 @@
           (Instant/parse x)
           x)))))
 
+(defn decimal-matcher [schema]
+  (when (= Money schema)
+    (coerce/safe
+      (fn [x]
+        (if (and (string? x) (re-matches money-regex x))
+          (BigDecimal. (str x))
+          x)))))
+
+(def matchers [decimal-matcher datetime-matcher coerce/json-coercion-matcher])
+
 (def contract-matcher
-  (coerce/first-matcher [datetime-matcher coerce/json-coercion-matcher]))
+  (coerce/first-matcher matchers))
+
+(def default-rate-matcher
+  (coerce/first-matcher matchers))

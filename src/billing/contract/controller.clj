@@ -4,8 +4,8 @@
             [billing.utils :refer [coerce-and-validate]]
             [billing.db :as db]
             [billing.contract.logic :refer [group-contracts-by-id group-rates-by-resource-name find-price assoc-costs]]
-            [billing.contract.controller-json :refer [ChargeResourcesRequest ContractRequest contract-matcher]])
-  (:import (java.time Instant)))
+            [billing.contract.controller-json :refer [ChargeResourcesRequest ContractRequest contract-matcher
+                                                      DefaultRates default-rate-matcher]]))
 
 (defn- get-contracts-by-id [customer-name]
   (let [constracts (db/get-contracts-by-customer customer-name)]
@@ -30,9 +30,16 @@
      :customerName customer-name
      :consumptions (map (fn-charge-consumption customer-name) consumptions)}))
 
+(defn assoc-id [id model]
+  (if id (assoc model :_id id) model))
 
-(defn save-contract [contract]
-  (let [contract (coerce-and-validate ContractRequest contract-matcher contract)]
-    (db/save-contract contract)
-    )
-  )
+(defn save-contract [contract & [id]]
+  (let [contract (coerce-and-validate ContractRequest contract-matcher contract)
+        contract (assoc-id id contract)]
+    (db/save-contract contract)))
+
+(defn save-default-rate [default-rates & [id]]
+  (let [default-rates (coerce-and-validate DefaultRates default-rate-matcher default-rates)
+        default-rates (assoc-id id default-rates)]
+    (db/save-default-rates default-rates)))
+

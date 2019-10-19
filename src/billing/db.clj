@@ -30,7 +30,10 @@
 (def coll-default-rates "default_rates")
 
 (defn save-contract [contract]
-  (mc/insert-and-return db coll-contracts contract))
+  (mc/save-and-return db coll-contracts contract))
+
+(defn save-default-rates [default-rates]
+  (mc/save-and-return db coll-default-rates default-rates))
 
 ; Queries
 (defn get-contracts []
