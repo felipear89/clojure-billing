@@ -1,0 +1,23 @@
+version: "3.7"
+services:
+  db:
+    image: mongo:4.0.4
+    environment:
+      - MONGO_INITDB_DATABASE=billing
+      - MONGO_INITDB_ROOT_USERNAME=billing-app
+      - MONGO_INITDB_ROOT_PASSWORD=123456
+    networks:
+      - backend
+    ports:
+      - '27017-27019:27017-27019'
+  billing:
+    build: .
+    container_name: billing-app
+    ports:
+      - "8080:3000"
+    networks:
+      - backend
+    depends_on:
+      - db
+networks:
+  backend:
